@@ -152,7 +152,8 @@ class Parser:
         # Declares a variable
         elif len(line) >= 3:
             if line[1] == "=":
-                self.saveGlobalVar(line[0], self.renderString(line[2]))
+                #if line[2][0] == "["
+                self.saveGlobalVar(line[0], self.renderString(" ".join(line[2:])))
             elif line[1] == "+=":
                 if line[2][0] == '"' and line[2][len(line) - 1] == '"':
                     self.internals.localVars[line[0]] += line[2].strip('"')

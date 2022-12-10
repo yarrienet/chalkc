@@ -1,8 +1,11 @@
 -- Should print `Hello Test`
 
 write "hello"
+
+example = "example name"
+
 func greet (name) {
-  write "Hello @name"
+  write "@example"
 }
 
 greet ("Harry")
