@@ -1,4 +1,3 @@
-arrone = [""]
 name = "abi"
 arr = ["one", "@name"]
-write "@arr"
+write "@name:0 @name:1 @name:2"

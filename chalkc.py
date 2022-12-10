@@ -58,10 +58,10 @@ class Parser:
             elif expectedType == 2:
                 # automatically split a string, converting it into an array
                 if variable[0] == 0:
-                    return variable[1].split("")
+                    return [*variable[1]]
                 elif variable[0] == 2:
-                    return variable[0]
-        except:
+                    return variable[1]
+        except KeyError:
             raise ChalkUndefinedVariable("`%s` does not exist" % var)
 
     def renderString(self, line):
@@ -70,7 +70,13 @@ class Parser:
             lineSplit = line.split(" ")
             for word in range(0, len(lineSplit)):
                 if lineSplit[word][0] == "@":
-                    lineSplit[word] = str(self.renderGlobalVar(lineSplit[word][1:]))
+                    colonSplit = lineSplit[word][1:].split(":")
+                    if len(colonSplit) > 1:
+                        arrayValue = self.renderGlobalVar(colonSplit[0], 2)
+                        indexValue = int(colonSplit[1])
+                        lineSplit[word] = arrayValue[indexValue]
+                    else:
+                        lineSplit[word] = self.renderGlobalVar(lineSplit[word][1:])
             return " ".join(lineSplit)
         else:
             raise ChalkSyntaxError("Does not follow string formatting")
