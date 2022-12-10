@@ -104,7 +104,7 @@ class Parser:
                     # mem = ["while", [blocks], ["true", "==", "true"]]
                     while self.compare([self.mem[-1][2][0], self.mem[-1][2][2]], self.mem[-1][2][1]):
                         for block in self.mem[-1][1]:
-                            buffer += self.parse(block)
+                            buffer.append(*self.parse(block))
 
             else:
                 raise ChalkSyntaxError("Unexpected end of block")
@@ -176,19 +176,21 @@ class Parser:
             for param in range(0, len(paramSplit)):
                 self.saveGlobalVar(self.internals.globalFuncs[line[0]][1][param], self.renderString(paramSplit[param]))
             for block in self.internals.globalFuncs[line[0]][0]:
-                self.parse(block)
+                buffer.append(*self.parse(block))
 
         # No statment found
         else:
             error.throwFatal("UndefinedStatement", "`" + line[0] + "` is not a valid statement")
         return buffer
 
-# p = Parser()
-# for arg in sys.argv:
-#     if os.path.isfile(arg) and arg[-6:] == ".chalk":
-#         openFile = open(arg, "r")
-#         openFile = openFile.read().split("\n")
-#         for line in openFile:
-#             if line:
-#                 p.parse(line)
-#         break
+p = Parser()
+for arg in sys.argv:
+    if os.path.isfile(arg) and arg[-6:] == ".chalk":
+        openFile = open(arg, "r")
+        openFile = openFile.read().split("\n")
+        for line in openFile:
+            if line:
+                output = p.parse(line)
+                if len(output) > 0:
+                    print("".join(p.parse(line)))
+        break
