@@ -36,17 +36,35 @@ class Parser:
         else:
             return line.replace("\t", "").lstrip()
 
-    def saveGlobalVar(self, name, content):
-        self.internals.globalVars[name] = content
+    def saveGlobalVar(self, name, type, value):
+        # format for variables
+        # [type, value]
+        # TYPE TABLE:
+        # 0 - string
+        # 1 - [RESERVED] (not yet implemented)
+        # 2 - array 
+        self.internals.globalVars[name] = [type, value]
 
-    def renderGlobalVar(self, var):
+    def renderGlobalVar(self, var, expectedType = 0):
         try:
-            return self.internals.globalVars[var]
+            variable = self.internals.globalVars[var]
+            # if the expected type is a string
+            if expectedType == 0:
+                if variable[0] == 0:
+                    return variable[1]
+                elif variable[0] == 2:
+                    # automatically convert an array into a string
+                    return self.stringifyArray(variable[1])
+            elif expectedType == 2:
+                # automatically split a string, converting it into an array
+                if variable[0] == 0:
+                    return variable[1].split("")
+                elif variable[0] == 2:
+                    return variable[0]
         except:
             raise ChalkUndefinedVariable("`%s` does not exist" % var)
 
     def renderString(self, line):
-        print(line)
         if line[0] == "\"" and line[-1] == "\"":
             line = line.replace("\"", "")
             lineSplit = line.split(" ")
@@ -57,8 +75,10 @@ class Parser:
         else:
             raise ChalkSyntaxError("Does not follow string formatting")
 
+    def stringifyArray(self, array):
+        return "[" + ", ".join(array) + "]"
+
     def parseArray(self, value):
-        print(value)
         # confirm is an array, otherwise throw error
         if value[0] == "[" and value[-1] == "]":
             splitItems = value.split(" ")
@@ -68,18 +88,21 @@ class Parser:
             for index, item in enumerate(splitItems):
                 # cut off the [ from the first item
                 item = item[1:] if index == 0 else item
+                # cut off the ] from the last item
                 item = item[:-1] if index == len(splitItems)-1 else item
+                # if the item has a comma then cut it off and expect another item
                 if item[-1] == ",":
                     pendingItem = True 
                     item = item[:-1]
                 else:
                     pendingItem = False
+                # render the string that the item is (for now) and add to items
                 items.append(self.renderString(item))
             if pendingItem:
                 raise ChalkSyntaxError("Expected item in array")
-            print(items) 
+            return items
         else:
-            raise ChalkSyntaxError("Expected [ to begin array")
+            raise ChalkSyntaxError("Invalid array syntax")
         
 
     def compare(self, strings, operator):
@@ -182,9 +205,9 @@ class Parser:
             if line[1] == "=":
                 value = " ".join(line[2:])
                 if line[2][0] == "\"":
-                    self.saveGlobalVar(line[0], self.renderString(value))
+                    self.saveGlobalVar(line[0], 0, self.renderString(value))
                 elif line[2][0] == "[":
-                    self.saveGlobalVar(line[0], self.parseArray(value))
+                    self.saveGlobalVar(line[0], 2, self.parseArray(value))
                 else:
                     raise ChalkSyntaxError("Expected string or array for variable assigment")
             elif line[1] == "+=":
@@ -208,7 +231,7 @@ class Parser:
         elif line[0] in self.internals.globalFuncs:
             paramSplit = self.chomp(line[1]).split(",")
             for param in range(0, len(paramSplit)):
-                self.saveGlobalVar(self.internals.globalFuncs[line[0]][1][param], self.renderString(paramSplit[param]))
+                self.saveGlobalVar(self.internals.globalFuncs[line[0]][1][param], 0, self.renderString(paramSplit[param]))
             for block in self.internals.globalFuncs[line[0]][0]:
                 parseBuffer = self.parse(block)
                 if len(parseBuffer) > 0:

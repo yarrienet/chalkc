@@ -1,0 +1,3 @@
+-- Same is how you define an immutable variable
+
+same name = "Chalk"

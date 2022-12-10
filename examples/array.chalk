@@ -1,3 +1,4 @@
-example = ["one", "two"]
-
-
+arrone = [""]
+name = "abi"
+arr = ["one", "@name"]
+write "@arr"
