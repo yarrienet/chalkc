@@ -1,5 +1,6 @@
 -- Should print `Hello Test`
 
+write "hello"
 func greet (name) {
   write "Hello @name"
 }
