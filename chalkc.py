@@ -65,18 +65,28 @@ class Parser:
             raise ChalkUndefinedVariable("`%s` does not exist" % var)
 
     def renderString(self, line):
+        # if starts and ends with double quotes
         if line[0] == "\"" and line[-1] == "\"":
+            # brutishly remove the double quotes (WHY?)
             line = line.replace("\"", "")
             lineSplit = line.split(" ")
+            # loop through each "word"
             for word in range(0, len(lineSplit)):
+                # check if "word" starts with @ making it a variable reference
                 if lineSplit[word][0] == "@":
+                    # check if the variable contins a colon by splitting it
                     colonSplit = lineSplit[word][1:].split(":")
                     if len(colonSplit) > 1:
+                        # if contains a colon then unpack it
+                        # resolve the variable name
                         arrayValue = self.renderGlobalVar(colonSplit[0], 2)
                         indexValue = int(colonSplit[1])
+                        # replace the "word" with the array with subscription
                         lineSplit[word] = arrayValue[indexValue]
                     else:
+                        # replace the "word" with the resloved variable
                         lineSplit[word] = self.renderGlobalVar(lineSplit[word][1:])
+            # return the finished word
             return " ".join(lineSplit)
         else:
             raise ChalkSyntaxError("Does not follow string formatting")
