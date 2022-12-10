@@ -46,7 +46,8 @@ class Parser:
             raise ChalkUndefinedVariable("`%s` does not exist" % var)
 
     def renderString(self, line):
-        if (line[0] == "\"" and line[-1] == "\""):
+        print(line)
+        if line[0] == "\"" and line[-1] == "\"":
             line = line.replace("\"", "")
             lineSplit = line.split(" ")
             for word in range(0, len(lineSplit)):
@@ -55,6 +56,31 @@ class Parser:
             return " ".join(lineSplit)
         else:
             raise ChalkSyntaxError("Does not follow string formatting")
+
+    def parseArray(self, value):
+        print(value)
+        # confirm is an array, otherwise throw error
+        if value[0] == "[" and value[-1] == "]":
+            splitItems = value.split(" ")
+            # list for parsed array items
+            items = []
+            pendingItem = False
+            for index, item in enumerate(splitItems):
+                # cut off the [ from the first item
+                item = item[1:] if index == 0 else item
+                item = item[:-1] if index == len(splitItems)-1 else item
+                if item[-1] == ",":
+                    pendingItem = True 
+                    item = item[:-1]
+                else:
+                    pendingItem = False
+                items.append(self.renderString(item))
+            if pendingItem:
+                raise ChalkSyntaxError("Expected item in array")
+            print(items) 
+        else:
+            raise ChalkSyntaxError("Expected [ to begin array")
+        
 
     def compare(self, strings, operator):
         run = True
@@ -104,7 +130,9 @@ class Parser:
                     # mem = ["while", [blocks], ["true", "==", "true"]]
                     while self.compare([self.mem[-1][2][0], self.mem[-1][2][2]], self.mem[-1][2][1]):
                         for block in self.mem[-1][1]:
-                            buffer.append(*self.parse(block))
+                            parseBuffer = self.parse(block)
+                            if len(parseBuffer) > 0:
+                                buffer.append(*parseBuffer)
 
             else:
                 raise ChalkSyntaxError("Unexpected end of block")
@@ -152,8 +180,13 @@ class Parser:
         # Declares a variable
         elif len(line) >= 3:
             if line[1] == "=":
-                #if line[2][0] == "["
-                self.saveGlobalVar(line[0], self.renderString(" ".join(line[2:])))
+                value = " ".join(line[2:])
+                if line[2][0] == "\"":
+                    self.saveGlobalVar(line[0], self.renderString(value))
+                elif line[2][0] == "[":
+                    self.saveGlobalVar(line[0], self.parseArray(value))
+                else:
+                    raise ChalkSyntaxError("Expected string or array for variable assigment")
             elif line[1] == "+=":
                 if line[2][0] == '"' and line[2][len(line) - 1] == '"':
                     self.internals.localVars[line[0]] += line[2].strip('"')
@@ -177,11 +210,13 @@ class Parser:
             for param in range(0, len(paramSplit)):
                 self.saveGlobalVar(self.internals.globalFuncs[line[0]][1][param], self.renderString(paramSplit[param]))
             for block in self.internals.globalFuncs[line[0]][0]:
-                buffer.append(*self.parse(block))
+                parseBuffer = self.parse(block)
+                if len(parseBuffer) > 0:
+                    buffer.append(*parseBuffer)
 
         # No statment found
         else:
-            error.throwFatal("UndefinedStatement", "`" + line[0] + "` is not a valid statement")
+            raise ChalkUndefinedStatement("`" + line[0] + "` is not a valid statement")
         return buffer
 
 p = Parser()
