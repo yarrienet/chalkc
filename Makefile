@@ -2,10 +2,11 @@ CC = gcc
 TARGET = libchalk
 VERSION = 0.1.0
 OS := $(shell uname)
+PYVER = $(shell python3 --version | grep -Po '3\.\d+')
 ifeq ($(OS), Darwin)
-	LIBS = -L/usr/local/opt/python3/Frameworks/Python.framework/Versions/Current/lib -lpython3.9
+	LIBS = -L/usr/local/opt/python3/Frameworks/Python.framework/Versions/Current/lib -lpython$(PYVER)
 else
-	LIBS = $(shell python3-config --libs)
+	LIBS = $(shell python3-config --libs) -lpython$(PYVER)
 endif
 
 CFLAGS = $(shell python3-config --cflags)
