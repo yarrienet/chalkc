@@ -156,7 +156,11 @@ class Parser:
         ln = self.chomp(ln)
         line = ln.split(" ")
 
-        if line[0] == "}":
+        # comments
+        if line[0][:2] == "--":
+            pass
+
+        elif line[0] == "}":
             if len(self.mem) > 0:
                 self.run = True
                 if self.mem[-1][0] == "function":
@@ -211,10 +215,12 @@ class Parser:
             buffer.append(self.renderString(" ".join(line[1:])))
 
         # read @var
-       #  elif line[0] == "read":
-#             if line[1][0] == "@":
-#                 read = input()
-#                 self.internals.globalVars[line[1][1:]] = read;
+        elif line[0] == "read":
+            if line[1][0] == "@":
+                read = input()
+                self.saveGlobalVar(line[1][1:], 0, read)
+            else:
+                raise ChalkSyntaxError("Expected variable for read")
 
         # Declares a variable
         elif len(line) >= 3:
@@ -240,8 +246,6 @@ class Parser:
                     self.internals.localVars[line[0]] -= line[2]
                 else:
                     self.internals.localVars[line[0]] -= line[2]
-            if line[0][0:1] == "--":
-                pass
 
         # Checks for a function
         elif line[0] in self.internals.globalFuncs:

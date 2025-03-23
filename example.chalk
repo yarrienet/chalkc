@@ -1,7 +1,11 @@
-func greet (name) {
-	write "Hello @name"
-}
+-- functions don't work :-)
+--
+-- func greet (name) {
+-- 	write "Hello @name"
+-- }
 
 write "What's your name?"
 read @name
-greet ("@name")
+write "Hello @name"
+
+-- greet ("@name")
